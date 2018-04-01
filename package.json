@@ -1,0 +1,63 @@
+{
+  "version": "0.1.0",
+  "name": "mobx-saga",
+  "repository": {
+    "url": "https://github.com/eloytoro/mobx-saga",
+    "type": "git"
+  },
+  "description": "Define business logic in cancellable, forkable, asynchronous javascript generator definitions and promises for your mobx observables",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "jsnex:main": "es/index.js",
+  "unpkg": "dist/mobx-saga.min.js",
+  "author": "Eloy Toro",
+  "files": [
+    "dist",
+    "src",
+    "lib",
+    "effects",
+    "es"
+  ],
+  "scripts": {
+    "clean": "rimraf ./lib ./es ./dist",
+    "build:umd": "webpack --output-library-target=umd --output-filename=./dist/mobx-saga.js",
+    "build:umd:min": "webpack --output-library-target=umd -p --output-filename=./dist/mobx-saga.min.js",
+    "build:cjs": "cross-env BABEL_ENV=cjs babel src --out-dir lib",
+    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es",
+    "build": "npm run clean && npm run build:cjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "test": "cross-env BABEL_ENV=test mocha --require=./test/setup.js --ui tdd",
+    "prettier": "prettier --single-quote --trailing-comma=all --write src/**/*.js test/**/*.js",
+    "prepublish": "npm run prettier && npm run build && npm run test"
+  },
+  "keywords": [
+    "generator",
+    "task",
+    "saga",
+    "cancellable",
+    "asynchronous",
+    "promise",
+    "process"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-preset-env": "^1.6.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "cross-env": "^5.0.5",
+    "mobx": "^4.1.1",
+    "mocha": "^4.0.1",
+    "prettier": "^1.11.1",
+    "regenerator-runtime": "^0.11.0",
+    "rimraf": "^2.6.2",
+    "sinon": "^4.0.1",
+    "sinon-chai": "^2.14.0",
+    "webpack": "^3.7.1"
+  },
+  "peerDependencies": {
+    "mobx": "^4.1.1"
+  }
+}
