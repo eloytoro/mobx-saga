@@ -37,16 +37,23 @@ export const every = decorator((generator, update) => {
 
 export const latest = decorator((generator, update) => {
   let currentSaga;
-  let deferred = defer();
+  let deferred;
   return function (computed) {
     if (currentSaga) {
       currentSaga.cancel();
+    } else {
+      deferred = defer();
     }
     currentSaga = new Saga(generator.call(this, computed));
-    currentSaga.promise.then(result => {
-      deferred.resolve(result);
-      deferred = defer();
-    });
+    currentSaga.promise
+      .then(result => {
+        deferred.resolve(result);
+        currentSaga = null;
+      })
+      .catch(err => {
+        deferred.reject(err);
+        currentSaga = null;
+      });
     return deferred.promise.then(update);
   };
 });

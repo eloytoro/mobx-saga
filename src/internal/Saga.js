@@ -68,7 +68,10 @@ class Saga {
       );
     } catch (err) {
       if (step.done || !this.running) throw err;
-      return this.iterate(iterable, action(iterable.throw).call(iterable, err));
+      return this.iterate(
+        iterable,
+        action(iterable.throw).call(iterable, err)
+      );
     }
   }
 

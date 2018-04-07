@@ -88,6 +88,16 @@ describe('decorators', () => {
       await obs.last(3).then(spy);
       expect(spy.args).to.deep.equal([[3], [3], [3]]);
     });
+
+    it('handles errors', async () => {
+      const err = new Error();
+      const obs = observable({
+        test: latest(function*(count) {
+          throw err;
+        }),
+      });
+      await expect(obs.test()).eventually.to.be.rejectedWith(err);
+    });
   });
 
   describe('channel', () => {
@@ -134,6 +144,16 @@ describe('decorators', () => {
       expect(resolved).to.equal(14);
       await delay(40);
       expect(resolved).to.equal(25);
+    });
+
+    it('handles errors', async () => {
+      const err = new Error();
+      const obs = observable({
+        test: channel(function*(count) {
+          throw err;
+        }),
+      });
+      await expect(obs.test()).eventually.to.be.rejectedWith(err);
     });
   });
 
@@ -196,6 +216,16 @@ describe('decorators', () => {
       expect(spybaz).to.have.been.calledTwice;
       expect(spybaz.args[0]).to.deep.equal([2]);
       expect(spybaz.args[1]).to.deep.equal([0]);
+    });
+
+    it('handles errors', async () => {
+      const err = new Error();
+      const obs = observable({
+        test: every(function*(count) {
+          throw err;
+        }),
+      });
+      await expect(obs.test()).eventually.to.be.rejectedWith(err);
     });
   });
 });
