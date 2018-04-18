@@ -30,21 +30,21 @@ const decorator = (main) => (initialValue, select) => {
 };
 
 export const every = decorator((generator, update) => {
-  return function (computed) {
-    return Saga.immediate(generator.call(this, computed)).then(update);
+  return function (...params) {
+    return Saga.immediate(generator.apply(this, params)).then(update);
   }
 });
 
 export const latest = decorator((generator, update) => {
   let currentSaga;
   let deferred;
-  return function (computed) {
+  return function (...params) {
     if (currentSaga) {
       currentSaga.cancel();
     } else {
       deferred = defer();
     }
-    currentSaga = new Saga(generator.call(this, computed));
+    currentSaga = new Saga(generator.apply(this, params));
     currentSaga.promise
       .then(result => {
         deferred.resolve(result);
@@ -60,10 +60,10 @@ export const latest = decorator((generator, update) => {
 
 export const channel = decorator((generator, update) => {
   const queue = [];
-  return function (computed) {
+  return function (...params) {
     const before = queue.slice();
     const promise = Promise.all(queue.slice())
-      .then(() => Saga.immediate(generator.call(this, computed)))
+      .then(() => Saga.immediate(generator.apply(this, params)))
     queue.push(promise);
     return promise.then(value => {
       queue.shift();
