@@ -4,11 +4,7 @@ import { reaction, observable } from 'mobx';
 
 const identity = val => val;
 
-const decorator = (main) => (initialValue, select) => {
-  if (typeof initialValue === 'function') {
-    const generator = initialValue;
-    return main(generator, identity);
-  }
+export const reduce = (initialValue, select) => {
   return (target, prop, currentDescriptor) => {
     if (target.constructor !== Object) {
       throw new TypeError('[MobXSaga] Decorating classes is not supported');
@@ -17,7 +13,7 @@ const decorator = (main) => (initialValue, select) => {
 
     const value = observable.box(initialValue);
     const update = value.set.bind(value);
-    reaction(select.bind(null, target), main(generator, update, target));
+    reaction(select.bind(null, target), (value) => generator(value).then(update));
     return {
       get() {
         return value.get();
@@ -29,13 +25,13 @@ const decorator = (main) => (initialValue, select) => {
   };
 };
 
-export const every = decorator((generator, update) => {
+export const every = (generator) => {
   return function (...params) {
-    return Saga.immediate(generator.apply(this, params)).then(update);
+    return Saga.immediate(generator.apply(this, params));
   }
-});
+};
 
-export const latest = decorator((generator, update) => {
+export const latest = (generator) => {
   let currentSaga;
   let deferred;
   return function (...params) {
@@ -54,11 +50,11 @@ export const latest = decorator((generator, update) => {
         deferred.reject(err);
         currentSaga = null;
       });
-    return deferred.promise.then(update);
+    return deferred.promise;
   };
-});
+};
 
-export const channel = decorator((generator, update) => {
+export const channel = (generator) => {
   const queue = [];
   return function (...params) {
     const before = queue.slice();
@@ -67,7 +63,7 @@ export const channel = decorator((generator, update) => {
     queue.push(promise);
     return promise.then(value => {
       queue.shift();
-      return update(value);
+      return value;
     });
   };
-});
+};

@@ -13,16 +13,18 @@ Declare your sagas in your observable and then use the `decorate` function from 
 the logic you want to apply.
 
 ```js
+import { latest, reduce } from 'mobx-saga';
+
 const user = observable({
   channel: null,
-  messages: function* (channel) {
+  messages: latest(function* (channel) {
     const messages = yield getMessagesFromChannel(channel);
     return messages;
-  }
+  })
 })
 
 decorate(user, {
-  messages: latest([], () => user.channel)
+  messages: reduce([], () => user.channel)
 })
 ```
 
@@ -38,9 +40,11 @@ Use these to `decorate` your properties in observable objects, you have to defin
 so it can be initialized and a `trackingFn` that acts as a mobx `reaction`, the result of this
 function will be observed, and its value will passed to the generator every time it changes.
 
-* `every(initialValue, trackingFn)`: will create a new instance of each saga every time it triggers
-* `latest(initialValue, trackingFn)`: will cancel previous running instances every time it triggers
-* `channel(initialValue, trackingFn)`: will queue new instances every time it triggers
+* `every(generator)`: will create a new instance of each saga every time it triggers
+* `latest(generator)`: will cancel previous running instances every time it triggers
+* `channel(generator)`: will queue new instances every time it triggers
+* `reduce(initialValue, trackingFn)`: when applied as a decorator it will treat the decorated
+property as the output of calling the saga
 
 You can also define saga actions the same way you would define `flow` using the decorators.
 

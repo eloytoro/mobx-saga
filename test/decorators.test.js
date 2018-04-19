@@ -1,20 +1,20 @@
 const { delay } = require('../src/effects');
 const { expect } = require('chai');
 const sinon = require('sinon');
-const { latest, channel, every } = require('../src/decorators');
+const { latest, channel, every, reduce } = require('../src/decorators');
 const { decorate, observable, computed, autorun } = require('mobx');
 
 describe('decorators', () => {
   it('decorated properties cant be assigned', () => {
     const obs = observable({
       foo: 0,
-      bar: function*(val) {
+      bar: latest(function*(val) {
         return val;
-      },
+      }),
     });
 
     const store = decorate(obs, {
-      bar: latest(null, () => obs.foo),
+      bar: reduce(null, () => obs.foo),
     });
 
     expect(() => {
@@ -25,16 +25,16 @@ describe('decorators', () => {
   it('decorated properties can be observed', async () => {
     const obs = observable({
       foo: 0,
-      bar: function*(val) {
+      bar: latest(function*(val) {
         return val + 1;
-      },
+      }),
       get baz() {
         return this.bar + 1;
       },
     });
 
     const store = decorate(obs, {
-      bar: latest(0, () => obs.foo),
+      bar: reduce(0, () => obs.foo),
     });
 
     store.foo = 1;
@@ -51,16 +51,16 @@ describe('decorators', () => {
       const end = sinon.spy();
       const obs = observable({
         foo: 0,
-        bar: function*(val) {
+        bar: latest(function*(val) {
           start();
           yield delay(20);
           end();
           return val + 3;
-        },
+        }),
       });
 
       const store = decorate(obs, {
-        bar: latest(null, () => obs.foo),
+        bar: reduce(null, () => obs.foo),
       });
 
       expect(store.bar).to.equal(null);
@@ -104,14 +104,14 @@ describe('decorators', () => {
     it('queues the task after the last one', async () => {
       const obs = observable({
         count: 0,
-        throttled: function*(count) {
+        throttled: channel(function*(count) {
           yield delay(40);
           return count + 1;
-        },
+        }),
       });
 
       const store = decorate(obs, {
-        throttled: channel(0, () => obs.count),
+        throttled: reduce(0, () => obs.count),
       });
 
       store.count = 1;
@@ -161,14 +161,14 @@ describe('decorators', () => {
     it('creates a new saga for each call', async () => {
       const obs = observable({
         count: 0,
-        delayed: function*(count) {
+        delayed: every(function*(count) {
           yield delay(20);
           return count + 1;
-        },
+        }),
       });
 
       const store = decorate(obs, {
-        delayed: every(0, () => obs.count),
+        delayed: reduce(0, () => obs.count),
       });
 
       expect(store.delayed).to.equal(0);
